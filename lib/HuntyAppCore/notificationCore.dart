@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:homework_reminder/main.dart';
+import 'package:homework_reminder/AppUI/main.dart';
 import 'dart:async';
-import 'dart:typed_data';
+import 'package:shared_preferences/shared_preferences.dart';
 
 var notificationPlugin = new FlutterLocalNotificationsPlugin();
 
@@ -82,16 +82,10 @@ class NotificationCore {
 
   displayDailyNotification(String periodInformation, String homeworkInformation, Time timeparam) async{
     var time = timeparam;
-    var vibrationPattern = Int64List(4);
-    vibrationPattern[0] = 0;
-    vibrationPattern[1] = 1000;
-    vibrationPattern[2] = 5000;
-    vibrationPattern[3] = 2000;
     var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
-        'lingfeishengtian_homework_reminder_id_913249987',
+        'lingfeishengtian_homework_reminder_id_913249988',
         'Homework Remind Everyday',
-        'To remind the user every day!',
-    vibrationPattern: vibrationPattern);
+        'To remind the user every day!');
     var iOSPlatformChannelSpecifics = new IOSNotificationDetails();
     var platformChannelSpecifics = new NotificationDetails(
         androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
