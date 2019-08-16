@@ -5,6 +5,7 @@ import 'package:homework_reminder/HuntyAppCore/customDialogOptions.dart';
 import 'package:homework_reminder/HuntyAppCore/notificationCore.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:device_info/device_info.dart';
 
 var textController = TextEditingController();
 var notificationCore;
@@ -58,15 +59,33 @@ class _PeriodsTableState extends State<PeriodsTable>
     controller.forward();
   }
 
-  setReminder(BuildContext context) async {
+  _isFirstTimeUsingApp(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
-    final didSet = prefs.getBool('didSetDailyNotifs6');
-    print(didSet);
-    if(didSet == null) {
-     prefs.setBool('didSetDailyNotifs6', true);
-      notificationCore.displayDailyNotification(
-          "Homework Reminder!", "Check and do your homework!", Time(15, 0, 0));
+    var isFirstTimeUsingApp = prefs.getBool('isFirstTimeUsingApp');
+    if (isFirstTimeUsingApp == null) {
+      if (Theme.of(context).platform == TargetPlatform.android) {
+        var manufacterName = await _getDeviceManufacturerName();
+        final finalMessage = ConstantManufacturersThatBlockNotifications
+            .getMessagePertainingToManufacturer(manufacterName);
+        showDialog(
+            context: context,
+            builder: (BuildContext context) => HuntyDialogForMoreText(
+                title: "Notifications for Android",
+                description: finalMessage,
+                buttonText: "Lets Do It!"));
+      }
     }
+  }
+
+  _getDeviceManufacturerName() async {
+    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+    return (androidInfo.manufacturer);
+  }
+
+  setReminder(BuildContext context) async {
+    notificationCore.displayDailyNotification(
+        "Homework Reminder!", "Check and do your homework!", Time(15, 0, 0));
   }
 
   okAddPeriodPressed() async {
@@ -97,6 +116,7 @@ class _PeriodsTableState extends State<PeriodsTable>
 
   @override
   Widget build(BuildContext context) {
+    _isFirstTimeUsingApp(context);
     setReminder(context);
     List<Widget> rows = [
       Divider(
@@ -169,6 +189,10 @@ class PeriodCell extends Container {
     });
   }
 
+  _onPeriodCellPressed(){
+
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -217,6 +241,7 @@ class PeriodCell extends Container {
                               size: 30,
                             ),
                             alignment: Alignment.topCenter,
+                            onPressed: _onPeriodCellPressed,
                           )
                         ],
                       ),

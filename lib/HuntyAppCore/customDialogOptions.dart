@@ -77,6 +77,45 @@ class HuntyDialog extends StatelessWidget {
   }
 }
 
+class HuntyDialogForMoreText extends HuntyDialog{
+  HuntyDialogForMoreText(
+      {@required title,
+        @required description,
+        @required buttonText})
+      : super(title: title, description: description, buttonText: buttonText);
+
+  @override
+  createDialogBoxContents(BuildContext context) {
+    return <Widget>[
+      Text(
+        title,
+        style: TextStyle(
+          fontSize: 16.0,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      SizedBox(height: 16.0),
+      Text(
+        description,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: 14.0,
+        ),
+      ),
+      SizedBox(height: 24.0),
+      Align(
+        alignment: Alignment.bottomRight,
+        child: FlatButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: Text(buttonText),
+        ),
+      ),
+    ];
+  }
+}
+
 class HuntyDialogWithText extends HuntyDialog {
   final String hint;
   var textController = TextEditingController();
