@@ -2,15 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:homework_reminder/HuntyAppCore/globalSupportVariables.dart';
 import 'package:homework_reminder/HuntyAppCore/types.dart';
 import 'package:homework_reminder/HuntyAppCore/customDialogOptions.dart';
+import 'package:homework_reminder/HuntyAppCore/notificationCore.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 var textController = TextEditingController();
+var notificationCore;
 
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    notificationCore = NotificationCore(context);
+    notificationCore.init();
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -41,6 +46,8 @@ class _PeriodsTableState extends State<PeriodsTable>
   void initState() {
     super.initState();
 
+    _getPeriods();
+
     controller = new AnimationController(
         vsync: this, duration: new Duration(milliseconds: 100));
     Tween tween = new Tween<double>(begin: 0.0, end: 75.0);
@@ -51,12 +58,32 @@ class _PeriodsTableState extends State<PeriodsTable>
     controller.forward();
   }
 
-  okAddPeriodPressed() {
+  okAddPeriodPressed() async{
     animatedHeightValues.add(75.0);
     controller.reset();
     controller.forward();
-    periods.add(Period(DateTime.now(), periods.length, "TestPeriod"));
-    periods[periods.length - 1].name = textController.text;
+    periods.add(Period(DateTime.now(), periods.length, "Homework Reminder!"));
+    var pd = periods[periods.length - 1];
+    pd.name = textController.text;
+
+    notificationCore.displayDailyNotification("Homework Reminder!", "Check and do your homework!", Time(15, 0, 0));
+    _savePeriods();
+  }
+
+  _savePeriods() async{
+    final prefs = await SharedPreferences.getInstance();
+    for(int i = 0; i < periods.length; i++){
+      prefs.setString('periodsPrefs$i', periods[i].name);
+    }
+    prefs.setInt('periodsAmt', periods.length);
+  }
+
+  _getPeriods() async{
+    final prefs = await SharedPreferences.getInstance();
+    int lim = prefs.getInt('periodsAmt') ?? 0;
+    for(int i = 0; i < lim; i++){
+      periods.add(Period(DateTime.now(), i, prefs.get('periodsPrefs$i')));
+    }
   }
 
   @override
