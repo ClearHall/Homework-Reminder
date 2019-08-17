@@ -2,11 +2,11 @@ class Period {
   DateTime time;
   int periodNumber;
   String name;
-  List<HomeworkAssignment> assignments = [];
+  List<String> assignments = [];
+  Map<String, String> uiInfo = Map.fromIterables({'height'}, {'75.0'});
 
-  Period(DateTime timeInDay, int period, String name) {
+  Period(DateTime timeInDay, String name) {
     time = timeInDay;
-    periodNumber = period;
     this.name = name;
   }
 }
@@ -35,9 +35,9 @@ class ConstantManufacturersThatBlockNotifications {
   ]);
 
   static getMessagePertainingToManufacturer(String phoneName) {
-    if(manufacturerMessages.containsKey(phoneName)){
+    if (manufacturerMessages.containsKey(phoneName)) {
       return manufacturerMessages[phoneName];
-    }else{
+    } else {
       return 'If you are running an Android version that restricts background processes to save battery life, then please allow Homework Reminder to autostart in your settings so we can successfully send you notifications.\nNote: You got this message because we did not detect a ROM that restricts processes, so you should be fine.';
     }
   }

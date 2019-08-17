@@ -77,11 +77,69 @@ class HuntyDialog extends StatelessWidget {
   }
 }
 
-class HuntyDialogForMoreText extends HuntyDialog{
+class HuntyDialogForConfirmation extends HuntyDialog {
+  Function() runIfUserConfirms;
+  String btnTextForConfirmation;
+  String btnTextForCancel;
+
+  HuntyDialogForConfirmation({
+    @required title,
+    @required description,
+    @required this.runIfUserConfirms,
+    @required this.btnTextForConfirmation,
+    @required this.btnTextForCancel,
+  }) : super(
+            title: title,
+            description: description,
+            buttonText: 'buttonText error not needed');
+
+  @override
+  createDialogBoxContents(BuildContext context) {
+    return <Widget>[
+      Text(
+        title,
+        style: TextStyle(
+          fontSize: 24.0,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      SizedBox(height: 16.0),
+      Text(
+        description,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: 16.0,
+        ),
+      ),
+      SizedBox( height: 24.0,),
+      Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+        Align(
+            alignment: Alignment.bottomLeft,
+            child: FlatButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text(btnTextForCancel),
+            )),
+        Align(
+          alignment: Alignment.bottomRight,
+          child: FlatButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              runIfUserConfirms();
+            },
+            child: Text(btnTextForConfirmation),
+          ),
+        )
+      ]),
+      SizedBox( height: 32.0,),
+    ];
+  }
+}
+
+class HuntyDialogForMoreText extends HuntyDialog {
   HuntyDialogForMoreText(
-      {@required title,
-        @required description,
-        @required buttonText})
+      {@required title, @required description, @required buttonText})
       : super(title: title, description: description, buttonText: buttonText);
 
   @override

@@ -3,7 +3,6 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:homework_reminder/main.dart';
 import 'dart:async';
-import 'package:shared_preferences/shared_preferences.dart';
 
 var notificationPlugin = new FlutterLocalNotificationsPlugin();
 
