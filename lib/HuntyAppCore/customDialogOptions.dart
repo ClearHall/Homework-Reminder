@@ -77,6 +77,10 @@ class HuntyDialog extends StatelessWidget {
   }
 }
 
+class HuntyDialogForGettingTimeInput{
+
+}
+
 class HuntyDialogForConfirmation extends HuntyDialog {
   Function() runIfUserConfirms;
   String btnTextForConfirmation;

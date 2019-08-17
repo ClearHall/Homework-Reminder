@@ -2,7 +2,7 @@ class Period {
   DateTime time;
   int periodNumber;
   String name;
-  List<String> assignments = [];
+  Map<String, String> assignments = Map.fromIterables([], []);
   Map<String, String> uiInfo = Map.fromIterables({'height'}, {'75.0'});
 
   Period(DateTime timeInDay, String name) {

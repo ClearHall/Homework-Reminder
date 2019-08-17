@@ -38,14 +38,10 @@ class PeriodsTable extends StatefulWidget {
   _PeriodsTableState createState() => _PeriodsTableState();
 }
 
-class _PeriodsTableState extends State<PeriodsTable>{
+class _PeriodsTableState extends State<PeriodsTable> {
   @override
   void initState() {
     super.initState();
-
-    setState(() {
-      _getPeriods();
-    });
   }
 
   _isFirstTimeUsingApp(BuildContext context) async {
@@ -73,7 +69,7 @@ class _PeriodsTableState extends State<PeriodsTable>{
     return (androidInfo.manufacturer);
   }
 
-  setReminder(BuildContext context) async {
+  setReminder() async {
     notificationCore.displayDailyNotification(
         "Homework Reminder!", "Check and do your homework!", Time(15, 0, 0));
   }
@@ -90,25 +86,36 @@ class _PeriodsTableState extends State<PeriodsTable>{
     final prefs = await SharedPreferences.getInstance();
     for (int i = 0; i < periods.length; i++) {
       prefs.setString('periodsPrefs${i}name', periods[i].name);
-      prefs.setStringList('periodsPrefs${i}assignments', periods[i].assignments);
+      prefs.setString(
+          'periodsPrefs${i}assignments', json.encode(periods[i].assignments));
     }
-    prefs.setInt('periodsAmt1', periods.length);
+    prefs.setInt('periodsAmt3', periods.length);
+  }
+
+  _convertMapToAssignmentsMap(Map x){
+    Map<String, String> tmp = Map();
+    for(String key in x.keys){
+      tmp[key] = x[key];
+    }
+    return tmp;
   }
 
   _getPeriods() async {
     final prefs = await SharedPreferences.getInstance();
-    int lim = prefs.getInt('periodsAmt1') ?? 0;
+    int lim = prefs.getInt('periodsAmt3') ?? 0;
     for (int i = 0; i < lim; i++) {
       Period pd = Period(DateTime.now(), prefs.get('periodsPrefs${i}name'));
-      pd.assignments = prefs.getStringList('periodsPrefs${i}assignments');
+      Map assignmentsJson = (json.decode(prefs.getString('periodsPrefs${i}assignments')));
+      pd.assignments = _convertMapToAssignmentsMap(assignmentsJson);
       periods.add(pd);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    _getPeriods();
     _isFirstTimeUsingApp(context);
-    setReminder(context);
+    setReminder();
     List<Widget> rows = [
       Divider(
         color: Colors.transparent,
@@ -188,24 +195,174 @@ class PeriodCell extends StatelessWidget {
     } else {
       parent.setState(() {
         pdName.uiInfo['height'] =
-            (20 + 75 + pdName.assignments.length * 10.0).toString();
+            (75 + pdName.assignments.length * 55.0).toString();
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    List<Widget> homeworkAss = List();
-    for (var homework in pdName.assignments) {
-      homeworkAss.add(Text(
-        homework,
-        textAlign: TextAlign.start,
-        style: TextStyle(
-          fontSize: 15,
-          color: Colors.white,
+    List<Widget> homeworkAssTools = List.of({ListTile(
+        title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Container(
+                padding: EdgeInsets.symmetric(
+                    horizontal: 10.0, vertical: 20.0),
+                child: Text(
+                  pdName.name,
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white,
+                  ),
+                  maxLines: 1,
+                ),
+              ),
+//                        double.parse(pdName.uiInfo['height']) <= 75
+//                            ? Container()
+//                            : Column(
+//                                children: homeworkAss.length == 0
+//                                    ? [
+//                                        Text(
+//                                          'No homework assignments!',
+//                                          textAlign: TextAlign.start,
+//                                          style: TextStyle(
+//                                            fontSize: 15,
+//                                            color: Colors.white,
+//                                          ),
+//                                          maxLines: 1,
+//                                        )
+//                                      ]
+//                                    : homeworkAss)
+            ]),
+        trailing: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                IconButton(
+                  icon: Icon(
+                    Icons.add_box,
+                    color: Colors.white70,
+                    size: 30,
+                  ),
+                  alignment: Alignment.topCenter,
+                  onPressed: () {
+                    showDialog(
+                        context: context,
+                        builder: (BuildContext context) =>
+                            HuntyDialogWithText(
+                                hint: 'Assignment Name',
+                                textController: textController,
+                                okPressed: () {
+                                  parent.setState(() {
+                                    pdName.assignments[textController.text] = 'false';
+                                    parent._savePeriods();
+                                  });
+                                },
+                                title: 'Create Assignment',
+                                description:
+                                'Enter the new name of the assignment.',
+                                buttonText: "Ok"));
+                  },
+                ),
+                IconButton(
+                  icon: Icon(
+                    Icons.delete_forever,
+                    color: Colors.white70,
+                    size: 30,
+                  ),
+                  alignment: Alignment.topCenter,
+                  onPressed: () {
+                    showDialog(
+                        context: context,
+                        builder: (BuildContext context) =>
+                            HuntyDialogForConfirmation(
+                                title: 'Confirm',
+                                description:
+                                'Do you really want to delete this period?',
+                                runIfUserConfirms: () {
+                                  this.parent.setState(() {
+                                    periods.remove(pdName);
+                                    parent._savePeriods();
+                                  });
+                                },
+                                btnTextForConfirmation: "I'm Sure",
+                                btnTextForCancel: 'Cancel'));
+                  },
+                ),
+                IconButton(
+                  icon: Icon(
+                    Icons.settings,
+                    color: Colors.white70,
+                    size: 30,
+                  ),
+                  alignment: Alignment.topCenter,
+                  onPressed: _onPeriodCellPressed,
+                ),
+              ],
+            )
+          ],
+        ))});
+    for (var homework in pdName.assignments.keys) {
+      homeworkAssTools.add(ListTile(
+        title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[Text(
+          homework,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 15,
+            color: Colors.white,
+          ),
+          maxLines: 1,
         ),
-        maxLines: 1,
-      ));
+      ]),
+          trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          IconButton(
+            icon: Icon(
+              pdName.assignments[homework] == 'false' ? Icons.check_box_outline_blank : Icons.check_box,
+              color: Colors.white70,
+              size: 20,
+            ),
+            alignment: Alignment.topCenter,
+            onPressed: () {
+              bool Stored = pdName.assignments[homework] == 'true';
+              print(Stored);
+              parent.setState(() {
+                pdName.assignments[homework] = (!Stored).toString();
+              });
+            },
+          ),
+          IconButton(
+            icon: Icon(
+              Icons.delete_forever,
+              color: Colors.white70,
+              size: 20,
+            ),
+            alignment: Alignment.topCenter,
+            onPressed: () {
+              parent.setState(() {
+                pdName.assignments.remove(homework);
+                _onPeriodCellPressed();
+              });
+              },
+          ),
+//          IconButton(
+//            icon: Icon(
+//              Icons.date_range,
+//              color: Colors.white70,
+//              size: 20,
+//            ),
+//            alignment: Alignment.topCenter,
+//            onPressed: () {},
+//          ),
+        ],
+      )));
     }
 
     return AnimatedContainer(
@@ -227,101 +384,7 @@ class PeriodCell extends StatelessWidget {
           },
           child: Card(
               color: Colors.white12,
-              child: ListTile(
-                title: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 10.0, vertical: 20.0),
-                        child: Text(
-                          pdName.name,
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.white,
-                          ),
-                          maxLines: 1,
-                        ),
-                      ),
-                      double.parse(pdName.uiInfo['height']) <= 75
-                          ? Container()
-                          : Column(children: homeworkAss.length == 0 ? [Text(
-                        'No homework assignments!',
-                        textAlign: TextAlign.start,
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: Colors.white,
-                        ),
-                        maxLines: 1,
-                      )] : homeworkAss )
-                    ]),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    IconButton(
-                      icon: Icon(
-                        Icons.add_box,
-                        color: Colors.white70,
-                        size: 30,
-                      ),
-                      alignment: Alignment.topCenter,
-                      onPressed: () {
-                        showDialog(
-                            context: context,
-                            builder: (BuildContext context) =>
-                                HuntyDialogWithText(
-                                    hint: 'Assignment Name',
-                                    textController: textController,
-                                    okPressed: () {
-                                      parent.setState(() {
-                                        pdName.assignments.add(
-                                                textController.text);
-                                        parent._savePeriods();
-                                      });
-                                    },
-                                    title: 'Create Assignment',
-                                    description:
-                                        'Enter the new name of the assignment.',
-                                    buttonText: "Ok"));
-                      },
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.delete_forever,
-                        color: Colors.white70,
-                        size: 30,
-                      ),
-                      alignment: Alignment.topCenter,
-                      onPressed: () {
-                        showDialog(
-                            context: context,
-                            builder: (BuildContext context) =>
-                                HuntyDialogForConfirmation(
-                                    title: 'Confirm',
-                                    description:
-                                        'Do you really want to delete this period?',
-                                    runIfUserConfirms: () {
-                                      this.parent.setState(() {
-                                        periods.remove(pdName);
-                                        parent._savePeriods();
-                                      });
-                                    },
-                                    btnTextForConfirmation: "I'm Sure",
-                                    btnTextForCancel: 'Cancel'));
-                      },
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.arrow_drop_down_circle,
-                        color: Colors.white70,
-                        size: 30,
-                      ),
-                      alignment: Alignment.topCenter,
-                      onPressed: _onPeriodCellPressed,
-                    )
-                  ],
-                ),
-              )),
+              child: ListView(children: homeworkAssTools,)),
         ));
   }
 }
